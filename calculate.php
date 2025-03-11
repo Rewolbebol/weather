@@ -165,9 +165,11 @@ if (isset($_POST['start_date']) && isset($_POST['start_time'])) {
     $startDateTimeString = $_POST['start_date'] . ' ' . $_POST['start_time'];
     // Create DateTime object with the target timezone
     $startDateTime = DateTime::createFromFormat('Y-m-d H:i', $startDateTimeString, $targetTimeZone);
-    if (!$startDateTime) {
+    if (!$startDateTime || $startDateTime->format('Y-m-d H:i') !== $startDateTimeString) {
         die("Error: Invalid start date or time format.");
     }
+} else {
+    die("Error: Start date or time is required.");
 }
 
 // Validate and process end date and time
@@ -175,9 +177,11 @@ if (isset($_POST['end_date']) && isset($_POST['end_time'])) {
     $endDateTimeString = $_POST['end_date'] . ' ' . $_POST['end_time'];
     // Create DateTime object with the target timezone
     $endDateTime = DateTime::createFromFormat('Y-m-d H:i', $endDateTimeString, $targetTimeZone);
-    if (!$endDateTime) {
+    if (!$endDateTime || $endDateTime->format('Y-m-d H:i') !== $endDateTimeString) {
         die("Error: Invalid end date or time format.");
     }
+} else {
+    die("Error: End date or time is required.");
 }
 
 if ($startDateTime > $endDateTime) {
