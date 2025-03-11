@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
         /* Style for invalid input */
-        input.invalid {
+        input.invalid, select.invalid {
             border: 2px solid red;
         }
     </style>

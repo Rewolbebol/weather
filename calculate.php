@@ -296,23 +296,9 @@ $formattedWoodchipDuration = number_format($hours + $decimalHours, 2);
             var tooltip = document.getElementById('tooltip');
             tooltip.style.display = 'none';
         }
-
-        // Function to toggle tooltip on touch devices
-        function toggleTooltip(event, text) {
-            var tooltip = document.getElementById('tooltip');
-            if (tooltip.style.display === 'block') {
-                tooltip.style.display = 'none';
-            } else {
-                showTooltip(event, text);
-            }
-            //prevent default touch behaviour
-            event.preventDefault();
-
-        }
         document.addEventListener('touchstart', function(event) {
             var tooltip = document.getElementById('tooltip');
-
-            if (!tooltip.contains(event.target) && event.target.className !== "hour") {
+            if (!tooltip.contains(event.target) && event.target.className !== 'hour') {
                 tooltip.style.display = 'none';
             }
         });
