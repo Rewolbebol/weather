@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>Weather Forecast</title>
+    <title>Pareģošana</title>
     <link rel="stylesheet" href="style.css">
     <!-- Include flatpickr CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -10,26 +10,26 @@
 
 <body>
     <div class="container">
-        <h1>Get Temperature Forecast</h1>
+        <h1>Šķeldas pateriņa kalkulators</h1>
         <form action="calculate.php" method="post">
-            <label for="location">Select Location:</label>
+            <label for="location">Izvēlies KM:</label>
             <select id="location" name="location">
-                <option value="">-- Select --</option>
+                <option value="">-- Izvēlies --</option>
                 <option value="Bauskas 207A">Bauskas 207A</option>
                 <option value="Nautrēnu 24">Nautrēnu 24</option>
             </select>
-            <label for="woodchip_m3">Woodchip Volume (m<sup>3</sup>):</label>
+            <label for="woodchip_m3">Šķeldas daudzums (m<sup>3</sup>):</label>
             <input type="number" id="woodchip_m3" name="woodchip_m3" min="0" step="0.01" required>
             <div class="date-time-group">
                 <div>
-                    <label for="start_date">Start Date:</label>
+                    <label for="start_date">Sākuma datums:</label>
                     <!-- Add class to input for flatpickr -->
                     <input type="text" id="start_date" name="start_date" class="flatpickr-input flatpickr-date" required
                         readonly="readonly">
                     <input type="hidden" name="start_date">
                 </div>
                 <div>
-                    <label for="start_time">Start Time:</label>
+                    <label for="start_time">Sākuma laiks:</label>
                     <!-- Add class to input for flatpickr -->
                     <input type="text" id="start_time" name="start_time" class="flatpickr-input flatpickr-time" required
                         readonly="readonly">
@@ -38,14 +38,14 @@
             </div>
             <div class="date-time-group">
                 <div>
-                    <label for="end_date">End Date:</label>
+                    <label for="end_date">Beigu datums:</label>
                     <!-- Add class to input for flatpickr -->
                     <input type="text" id="end_date" name="end_date" class="flatpickr-input flatpickr-date" required
                         readonly="readonly">
                     <input type="hidden" name="end_date">
                 </div>
                 <div>
-                    <label for="end_time">End Time:</label>
+                    <label for="end_time">Beigu laiks:</label>
                     <!-- Add class to input for flatpickr -->
                     <input type="text" id="end_time" name="end_time" class="flatpickr-input flatpickr-time" required
                         readonly="readonly">
@@ -53,7 +53,7 @@
                 </div>
             </div>
 
-            <button type="submit">Get Forecast</button>
+            <button type="submit">Pareģot</button>
         </form>
 
     </div>

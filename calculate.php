@@ -256,7 +256,7 @@ $totalPowerplantOutputMW = $totalHours > 0 ? $totalPowerplantOutputMW / $totalHo
 <html>
 
 <head>
-    <title>Forecast Results</title>
+    <title>Rezultāti</title>
     <link rel="stylesheet" href="style.css">
     <script>
         function showTooltip(event, text) {
@@ -277,19 +277,19 @@ $totalPowerplantOutputMW = $totalHours > 0 ? $totalPowerplantOutputMW / $totalHo
 <body>
     <div class="container">
         <div id="tooltip"></div>
-        <h1>Temperature Forecast</h1>
+        <h1>Temperatūru prognoze</h1>
         <div class="main-content">
             <div class="debug-data">
-                <h2>Calculations:</h2>
+                <h2>Kalkulācijas:</h2>
                 <div class="debug-hourly-data">
                     <?php foreach ($hourlyCalculations as $calculation): ?>
                         <div class="debug-hour">
-                            <?= $calculation['time'] ?> - Output: <?= round($calculation['powerplantOutput'], 2) ?> MW -
-                            Duration: <?= round($calculation['woodchipDurationForHour'], 2) ?>h
+                            <?= $calculation['time'] ?> - Jauda: <?= round($calculation['powerplantOutput'], 2) ?> MW -
+                            Laiks: <?= round($calculation['woodchipDurationForHour'], 2) ?>h
                         </div>
                     <?php endforeach; ?>
                     <div class="debug-hour">
-                        Average Output: <?= round($totalPowerplantOutputMW, 2) ?> MW - Total Duration:
+                        Vidējā jauda: <?= round($totalPowerplantOutputMW, 2) ?> MW - Kopējais laiks:
                         <?= $formattedWoodchipDuration ?>h
                     </div>
                 </div>
@@ -297,22 +297,21 @@ $totalPowerplantOutputMW = $totalHours > 0 ? $totalPowerplantOutputMW / $totalHo
 
             <div class="forecast-results">
                 <?php if (isset($selectedLocation)): ?>
-                    <p class="forecast-location">Forecast for: <strong><?= $selectedLocation ?></strong></p>
+                    <p class="forecast-location">Prognoze priekš: <strong><?= $selectedLocation ?></strong></p>
                 <?php endif; ?>
 
-                <p class="forecast-period">From <strong>
+                <p class="forecast-period">No <strong>
                         <?= $startDateTime->format('Y-m-d H:i') ?>
-                    </strong> till <strong>
+                    </strong> līdz <strong>
                         <?= $endDateTime->format('Y-m-d H:i') ?>
                     </strong> </p>
                 <?php if ($totalHours == 0): ?>
-                    <p class="no-data">No data for that time interval </p>
+                    <p class="no-data">Nav datu priekš tāda intervālā </p>
                 <?php endif; ?>
                 <?php if ($totalHours > 0): ?>
                     <p class="woodchip-duration">
-                        With <strong><?= $woodchipM3 ?></strong> m<sup>3</sup> of woodchip, the powerplant will last
-                        approximately
-                        <strong><?= $formattedWoodchipDuration ?></strong> hours till
+                        Ar <strong><?= $woodchipM3 ?></strong> m<sup>3</sup> šķeldas pietiks uz
+                        <strong><?= $formattedWoodchipDuration ?></strong> stundām, līdz
                         <strong><?= $woodchipEndTime->format("Y-m-d H:i") ?></strong>.
                     </p>
 
@@ -357,7 +356,7 @@ $totalPowerplantOutputMW = $totalHours > 0 ? $totalPowerplantOutputMW / $totalHo
                                                 
                                             }
 
-                                          ?>" onmouseover="showTooltip(event, 'Woodchip needed up to this point: <?= $neededM3Rounded ?> m³')"
+                                          ?>" onmouseover="showTooltip(event, 'Šķeldas daudzums līdz šai vietai: <?= $neededM3Rounded ?> m³')"
                                             onmouseout="hideTooltip()">
                                             <div class="hour-time">
                                                 <?= $hour['time'] ?>
@@ -381,7 +380,7 @@ $totalPowerplantOutputMW = $totalHours > 0 ? $totalPowerplantOutputMW / $totalHo
                 <?php endif; ?>
             </div>
         </div>
-        <a href="index.php" class="new-search-link">New Search</a>
+        <a href="index.php" class="new-search-link">Atpakaļ uz izvelni</a>
     </div>
 </body>
 
