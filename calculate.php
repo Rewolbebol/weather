@@ -102,6 +102,7 @@ $powerplantOutput = [
         '20' => 0.54,
     ],
 ];
+
 //woodchip parameters
 $woodchipEfficiency = 0.7;
 $powerplantLosses = 0.12;
@@ -163,32 +164,45 @@ if (!$data || !$data['success']) {
     $error_message = isset($data['error']['message']) ? $data['error']['message'] : 'Unknown API error';
     die("Weather service error: {$error_message}");
 }
+
 // Get timezone from API response, or use default
 $timezone = isset($data['data']['timezone']) ? $data['data']['timezone'] : $defaultTimezone;
 $targetTimeZone = new DateTimeZone($timezone);
 
-// Validate and process start date and time
-if (isset($_POST['start_date']) && isset($_POST['start_time'])) {
-    $startDateTimeString = $_POST['start_date'] . ' ' . $_POST['start_time'];
-    // Create DateTime object with the target timezone
-    $startDateTime = DateTime::createFromFormat('Y-m-d H:i', $startDateTimeString, $targetTimeZone);
-    if (!$startDateTime || $startDateTime->format('Y-m-d H:i') !== $startDateTimeString) {
-        die("Error: Invalid start date or time format.");
+// Function to validate and format date and time
+function validateAndFormatDateTime($dateTimeString, $timezone)
+{
+    $dateTimeString = trim(preg_replace('/\s+/', ' ', $dateTimeString)); //remove multiple spaces
+
+    if (empty($dateTimeString)) {
+        throw new Exception("Date and time are required.");
     }
-} else {
-    die("Error: Start date or time is required.");
+
+    // Attempt to create DateTime object using stricter parsing
+    $dateTime = DateTime::createFromFormat('Y-m-d H:i', $dateTimeString, $timezone);
+
+    if (!$dateTime) {
+        // Try a more lenient parse if the strict one fails (for debugging purposes)
+        $dateTime = DateTime::createFromFormat('Y-m-d H:i', $dateTimeString, $timezone);
+        if (!$dateTime) {
+            throw new Exception("Invalid date/time format. Please use YYYY-MM-DD HH:MM format.  Error: " . print_r(DateTime::getLastErrors(), true));
+        }
+    }
+    return $dateTime;
+}
+
+// Validate and process start date and time
+try {
+    $startDateTime = validateAndFormatDateTime($_POST['start_datetime'], $targetTimeZone);
+} catch (Exception $e) {
+    die("Error: " . $e->getMessage());
 }
 
 // Validate and process end date and time
-if (isset($_POST['end_date']) && isset($_POST['end_time'])) {
-    $endDateTimeString = $_POST['end_date'] . ' ' . $_POST['end_time'];
-    // Create DateTime object with the target timezone
-    $endDateTime = DateTime::createFromFormat('Y-m-d H:i', $endDateTimeString, $targetTimeZone);
-    if (!$endDateTime || $endDateTime->format('Y-m-d H:i') !== $endDateTimeString) {
-        die("Error: Invalid end date or time format.");
-    }
-} else {
-    die("Error: End date or time is required.");
+try {
+    $endDateTime = validateAndFormatDateTime($_POST['end_datetime'], $targetTimeZone);
+} catch (Exception $e) {
+    die("Error: " . $e->getMessage());
 }
 
 if ($startDateTime > $endDateTime) {
@@ -200,6 +214,7 @@ if ($startDateTime < $now) {
     die("Error: Start Date and Time cannot be in the past");
 }
 
+// ... (rest of your code after date/time processing) ...
 // Process and display data
 $hourlyData = $data['data']['hourly']['data'];
 
@@ -283,6 +298,7 @@ $formattedWoodchipDuration = number_format($hours + $decimalHours, 2);
 
 
 ?>
+
 
 <!DOCTYPE html>
 <html>
