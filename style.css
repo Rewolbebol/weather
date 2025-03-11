@@ -379,7 +379,7 @@ button:hover {
     /* Light red background */
 }
 
-.hour.woodchip-end + .hour {
+.hour.woodchip-end + .hour,.hour.woodchip-end-next {
     background-color: #ffdddd;
 }
 
@@ -388,7 +388,9 @@ button:hover {
 .hour.woodchip-end .hour-powerplant,
 .hour.woodchip-end + .hour .hour-time,
 .hour.woodchip-end + .hour .hour-temp,
-.hour.woodchip-end + .hour .hour-powerplant {
+.hour.woodchip-end + .hour .hour-powerplant,.hour.woodchip-end-next .hour-time,
+.hour.woodchip-end-next .hour-temp,
+.hour.woodchip-end-next .hour-powerplant {
     animation: pulsate 1s ease-out infinite;
     /* Pulsating animation */
     color: red;

@@ -218,7 +218,7 @@ foreach ($hourlyData as $hour) {
         $powerplantOutputMW = isset($powerplantOutput[$selectedLocation]["{$temperature}"]) ? $powerplantOutput[$selectedLocation]["{$temperature}"] : 0; // Default to 0 if not found
         $woodchipDurationForHour = ($powerplantOutputMW > 0) ? $totalWoodchipMW / $powerplantOutputMW : 0;
         $hourlyWoodchipDuration[] = $woodchipDurationForHour;
-       
+
         $grouped[$dateKey][] = [
             'time' => $dt->format('H:i'),
             'temp' => $temperature,
@@ -227,8 +227,8 @@ foreach ($hourlyData as $hour) {
             'powerplantOutput' => $powerplantOutputMW,
             'woodchipDurationForHour' => $woodchipDurationForHour,
         ];
-         $allHourlyData[] = [
-           'time' => $dt->format('Y-m-d H:i'),
+        $allHourlyData[] = [
+            'time' => $dt->format('Y-m-d H:i'),
             'temp' => $temperature,
             'powerplantOutput' => $powerplantOutputMW,
         ];
@@ -317,8 +317,9 @@ $totalPowerplantOutputMW = $totalHours > 0 ? $totalPowerplantOutputMW / $totalHo
                     </p>
 
                     <div class="forecast-data">
-                        <?php 
+                        <?php
                         $cumulativeWoodchipNeededTotal = 0;
+                        $lastCorrectHourTimestamp = null; // Initialize the last correct hour timestamp
                         foreach ($grouped as $date => $hours): ?>
                             <div class="day-container">
                                 <div class="date-column">
@@ -327,24 +328,36 @@ $totalPowerplantOutputMW = $totalHours > 0 ? $totalPowerplantOutputMW / $totalHo
                                 <div class="hourly-bar">
                                     <?php
                                     $previousHourEndReached = false;
-                                    $cumulativeWoodchipNeeded = 0;
+                                     $firstIncorrectHour = false;
                                     foreach ($hours as $hour):
                                         $currentDateTime = new DateTime();
                                         $currentDateTime->setTimestamp($hour["timestamp"])->setTimezone($targetTimeZone);
-
-                                        $woodchipEndReached = $currentDateTime >= $woodchipEndTime;
-                                       $cumulativeWoodchipNeededTotal += $hour['powerplantOutput'];
-                                        $neededM3 = round(($cumulativeWoodchipNeededTotal * (1/$woodchipEfficiency )* (1/(1-$powerplantLosses))), 2) ;
+                                      
+                                        $cumulativeWoodchipNeededTotal += $hour['powerplantOutput'];
+                                        $neededM3 = ($cumulativeWoodchipNeededTotal * (1 / $woodchipEfficiency) * (1 / (1 - $powerplantLosses)));
+                                        $neededM3Rounded = round($neededM3, 2);
+                                        $woodchipEndReached = $neededM3 > $woodchipM3;
+                                            if (!$woodchipEndReached) {
+                                            $lastCorrectHourTimestamp = $hour['timestamp']; // Update the last correct hour timestamp
+                                            }
                                         ?>
                                         <div class="hour <?php
-                                        if ($woodchipEndReached) {
-                                            echo "woodchip-end";
-                                            $previousHourEndReached = true;
-                                        } elseif ($previousHourEndReached) {
-                                            echo "woodchip-end-next";
+                                             if ($woodchipEndReached) {
+                                                if (!$firstIncorrectHour) {
+                                                    echo "woodchip-end";
+                                                    $firstIncorrectHour = true;
+                                                } elseif($firstIncorrectHour) {
+                                                  echo "woodchip-end-next";
+                                                }
+                                                $previousHourEndReached = true;
+                                               
+                                            } elseif ($previousHourEndReached) {
+                                               echo "woodchip-end-next";
+                                                $previousHourEndReached = false;
+                                                
+                                            }
 
-                                        }
-                                        ?>" onmouseover="showTooltip(event, 'Woodchip needed up to this point: <?= $neededM3 ?> m³')"
+                                          ?>" onmouseover="showTooltip(event, 'Woodchip needed up to this point: <?= $neededM3Rounded ?> m³')"
                                             onmouseout="hideTooltip()">
                                             <div class="hour-time">
                                                 <?= $hour['time'] ?>
@@ -359,11 +372,7 @@ $totalPowerplantOutputMW = $totalHours > 0 ? $totalPowerplantOutputMW / $totalHo
 
                                         </div>
                                         <?php
-                                        if ($woodchipEndReached) {
-                                            $previousHourEndReached = true;
-                                        } else {
-                                            $previousHourEndReached = false;
-                                        }
+
                                         endforeach; ?>
                                 </div>
                             </div>
