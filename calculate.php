@@ -5,7 +5,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // Configuration - Add your API key here
-$api_key = '17139ab945fb8111edc7436c20cb1940'; // <--- REPLACE WITH YOUR ACTUAL API KEY
+$api_key = '17139ab945fb8111edc7436c20cb1940'; // Replace with your actual API key
 
 // Location options with coordinates
 $locations = [
@@ -200,8 +200,8 @@ $totalHours = 0;
 $totalPowerplantOutputMW = 0;
 $hourlyWoodchipDuration = [];
 $totalWoodchipMW = $woodchipM3 * $woodchipEfficiency * (1 - $powerplantLosses);
-$hourlyCalculations = []; // Array to store calculations for each hour
 $allHourlyData = []; //add new array to hold hourly data with cummulative value
+$hourlyCalculations = [];
 
 foreach ($hourlyData as $hour) {
     $dt = new DateTime();
@@ -216,8 +216,6 @@ foreach ($hourlyData as $hour) {
             $temperature = 0;
         }
         $powerplantOutputMW = isset($powerplantOutput[$selectedLocation]["{$temperature}"]) ? $powerplantOutput[$selectedLocation]["{$temperature}"] : 0; // Default to 0 if not found
-        $woodchipDurationForHour = ($powerplantOutputMW > 0) ? $totalWoodchipMW / $powerplantOutputMW : 0;
-        $hourlyWoodchipDuration[] = $woodchipDurationForHour;
 
         $grouped[$dateKey][] = [
             'time' => $dt->format('H:i'),
@@ -225,31 +223,54 @@ foreach ($hourlyData as $hour) {
             'timestamp' => $hour['forecastStart'],
             // Add powerplant output to the data
             'powerplantOutput' => $powerplantOutputMW,
-            'woodchipDurationForHour' => $woodchipDurationForHour,
         ];
         $allHourlyData[] = [
             'time' => $dt->format('Y-m-d H:i'),
             'temp' => $temperature,
             'powerplantOutput' => $powerplantOutputMW,
+            'timestamp' => $hour['forecastStart'], // Include timestamp
         ];
-        $totalPowerplantOutputMW += $powerplantOutputMW;
-        $totalHours++;
-        // Store the calculation for this hour
         $hourlyCalculations[] = [
             'time' => $dt->format('Y-m-d H:i'),
             'powerplantOutput' => $powerplantOutputMW,
-            'woodchipDurationForHour' => $woodchipDurationForHour,
         ];
+        $totalPowerplantOutputMW += $powerplantOutputMW;
+        $totalHours++;
     }
 }
 
-$averageWoodchipDuration = ($totalHours > 0) ? array_sum($hourlyWoodchipDuration) / $totalHours : 0;
+// Calculate woodchip end time precisely
+$cumulativeWoodchipNeededTotal = 0;
+$lastCorrectHourTimestamp = null;
+$lastCorrectHour = null; // Track the last correct hour data
 
-// Find the estimated woodchip end time
+foreach ($allHourlyData as $hour) {
+    $cumulativeWoodchipNeededTotal += $hour['powerplantOutput'];
+    $neededM3 = ($cumulativeWoodchipNeededTotal * (1 / $woodchipEfficiency) * (1 / (1 - $powerplantLosses)));
+
+    if ($neededM3 <= $woodchipM3) {
+        $lastCorrectHourTimestamp = DateTime::createFromFormat('Y-m-d H:i', $hour['time'], $targetTimeZone)->getTimestamp();
+        $lastCorrectHour = $hour;
+    } else {
+        break; // Stop when woodchip runs out
+    }
+}
+
 $woodchipEndTime = clone $startDateTime;
-$woodchipEndTime->modify("+" . round($averageWoodchipDuration) . " hours");
-$formattedWoodchipDuration = round($averageWoodchipDuration);
-$totalPowerplantOutputMW = $totalHours > 0 ? $totalPowerplantOutputMW / $totalHours : 0;
+if ($lastCorrectHourTimestamp !== null) {
+    $woodchipEndTime->setTimestamp($lastCorrectHourTimestamp);
+}
+
+// Calculate total duration with decimal precision
+$diff = $woodchipEndTime->getTimestamp() - $startDateTime->getTimestamp();
+//use floor and add rest of seconds to get two digits.
+$hours = floor($diff / 3600);
+$minutes = floor(($diff % 3600) / 60);
+$seconds = $diff % 60;
+$decimalHours = round(($minutes * 60 + $seconds) / 3600, 2);
+$formattedWoodchipDuration = number_format($hours + $decimalHours, 2);
+
+
 ?>
 
 <!DOCTYPE html>
@@ -271,6 +292,26 @@ $totalPowerplantOutputMW = $totalHours > 0 ? $totalPowerplantOutputMW / $totalHo
             var tooltip = document.getElementById('tooltip');
             tooltip.style.display = 'none';
         }
+
+        // Function to toggle tooltip on touch devices
+        function toggleTooltip(event, text) {
+            var tooltip = document.getElementById('tooltip');
+            if (tooltip.style.display === 'block') {
+                tooltip.style.display = 'none';
+            } else {
+                showTooltip(event, text);
+            }
+            //prevent default touch behaviour
+            event.preventDefault();
+
+        }
+        document.addEventListener('touchstart', function(event) {
+            var tooltip = document.getElementById('tooltip');
+
+            if (!tooltip.contains(event.target) && event.target.className !== "hour") {
+                tooltip.style.display = 'none';
+            }
+        });
     </script>
 </head>
 
@@ -282,21 +323,22 @@ $totalPowerplantOutputMW = $totalHours > 0 ? $totalPowerplantOutputMW / $totalHo
             <div class="debug-data">
                 <h2>Kalkulācijas:</h2>
                 <div class="debug-hourly-data">
-                    <?php foreach ($hourlyCalculations as $calculation): ?>
+                    <?php
+                    $debugCumulativeWoodchipNeeded = 0;
+                    foreach ($hourlyCalculations as $calculation) :
+                        $debugCumulativeWoodchipNeeded += $calculation['powerplantOutput'];
+                        $debugNeededM3 = ($debugCumulativeWoodchipNeeded * (1 / $woodchipEfficiency) * (1 / (1 - $powerplantLosses)));
+
+                    ?>
                         <div class="debug-hour">
-                            <?= $calculation['time'] ?> - Jauda: <?= round($calculation['powerplantOutput'], 2) ?> MW -
-                            Laiks: <?= round($calculation['woodchipDurationForHour'], 2) ?>h
+                            <?= $calculation['time'] ?> - Jauda: <?= round($calculation['powerplantOutput'], 2) ?> MW - Šķeldas kopā: <?= number_format($debugNeededM3, 2) ?> m3
                         </div>
                     <?php endforeach; ?>
-                    <div class="debug-hour">
-                        Vidējā jauda: <?= round($totalPowerplantOutputMW, 2) ?> MW - Kopējais laiks:
-                        <?= $formattedWoodchipDuration ?>h
-                    </div>
                 </div>
             </div>
 
             <div class="forecast-results">
-                <?php if (isset($selectedLocation)): ?>
+                <?php if (isset($selectedLocation)) : ?>
                     <p class="forecast-location">Prognoze priekš: <strong><?= $selectedLocation ?></strong></p>
                 <?php endif; ?>
 
@@ -305,10 +347,10 @@ $totalPowerplantOutputMW = $totalHours > 0 ? $totalPowerplantOutputMW / $totalHo
                     </strong> līdz <strong>
                         <?= $endDateTime->format('Y-m-d H:i') ?>
                     </strong> </p>
-                <?php if ($totalHours == 0): ?>
+                <?php if ($totalHours == 0) : ?>
                     <p class="no-data">Nav datu priekš tāda intervālā </p>
                 <?php endif; ?>
-                <?php if ($totalHours > 0): ?>
+                <?php if ($lastCorrectHour !== null) : ?>
                     <p class="woodchip-duration">
                         Ar <strong><?= $woodchipM3 ?></strong> m<sup>3</sup> šķeldas pietiks uz
                         <strong><?= $formattedWoodchipDuration ?></strong> stundām, līdz
@@ -318,46 +360,42 @@ $totalPowerplantOutputMW = $totalHours > 0 ? $totalPowerplantOutputMW / $totalHo
                     <div class="forecast-data">
                         <?php
                         $cumulativeWoodchipNeededTotal = 0;
-                        $lastCorrectHourTimestamp = null; // Initialize the last correct hour timestamp
-                        foreach ($grouped as $date => $hours): ?>
+                        $firstIncorrectHour = false;
+                        $hoursCount = 0;
+                        $startDateTimeForCounting = clone $startDateTime;
+                        foreach ($grouped as $date => $hours) : ?>
                             <div class="day-container">
                                 <div class="date-column">
                                     <?= date('l, F jS', strtotime($date)) ?>
                                 </div>
                                 <div class="hourly-bar">
                                     <?php
-                                    $previousHourEndReached = false;
-                                     $firstIncorrectHour = false;
-                                    foreach ($hours as $hour):
+                                    foreach ($hours as $hour) :
                                         $currentDateTime = new DateTime();
                                         $currentDateTime->setTimestamp($hour["timestamp"])->setTimezone($targetTimeZone);
-                                      
+                                        $hoursCount =  ($currentDateTime->getTimestamp() - $startDateTimeForCounting->getTimestamp()) / 3600;
+
                                         $cumulativeWoodchipNeededTotal += $hour['powerplantOutput'];
                                         $neededM3 = ($cumulativeWoodchipNeededTotal * (1 / $woodchipEfficiency) * (1 / (1 - $powerplantLosses)));
                                         $neededM3Rounded = round($neededM3, 2);
-                                        $woodchipEndReached = $neededM3 > $woodchipM3;
-                                            if (!$woodchipEndReached) {
-                                            $lastCorrectHourTimestamp = $hour['timestamp']; // Update the last correct hour timestamp
-                                            }
-                                        ?>
-                                        <div class="hour <?php
-                                             if ($woodchipEndReached) {
-                                                if (!$firstIncorrectHour) {
-                                                    echo "woodchip-end";
-                                                    $firstIncorrectHour = true;
-                                                } elseif($firstIncorrectHour) {
-                                                  echo "woodchip-end-next";
-                                                }
-                                                $previousHourEndReached = true;
-                                               
-                                            } elseif ($previousHourEndReached) {
-                                               echo "woodchip-end-next";
-                                                $previousHourEndReached = false;
-                                                
-                                            }
+                                        $hoursRounded = number_format($hoursCount, 2);
 
-                                          ?>" onmouseover="showTooltip(event, 'Šķeldas daudzums līdz šai vietai: <?= $neededM3Rounded ?> m³')"
-                                            onmouseout="hideTooltip()">
+                                        $woodchipEndReached = $neededM3 > $woodchipM3;
+                                        $woodchipEndReachedOrNext = $currentDateTime->getTimestamp() > $lastCorrectHourTimestamp && $lastCorrectHourTimestamp !== null;
+
+                                    ?>
+                                        <div class="hour <?php
+                                                            if ($woodchipEndReached && $woodchipEndReachedOrNext) {
+                                                                if (!$firstIncorrectHour) {
+                                                                    echo "woodchip-end";
+                                                                    $firstIncorrectHour = true;
+                                                                } else {
+                                                                    echo "woodchip-end-next";
+                                                                }
+                                                            }
+
+                                                            ?>" onmouseover="showTooltip(event, 'Šķeldas daudzums līdz šai vietai: <?= $neededM3Rounded ?> m³ , stundu skaits: <?= $hoursRounded ?>')" onmouseout="hideTooltip()"
+                                            ontouchstart="toggleTooltip(event, 'Šķeldas daudzums līdz šai vietai: <?= $neededM3Rounded ?> m³ , stundu skaits: <?= $hoursRounded ?>')">
                                             <div class="hour-time">
                                                 <?= $hour['time'] ?>
                                             </div>
@@ -370,9 +408,7 @@ $totalPowerplantOutputMW = $totalHours > 0 ? $totalPowerplantOutputMW / $totalHo
                                             </div>
 
                                         </div>
-                                        <?php
-
-                                        endforeach; ?>
+                                    <?php endforeach; ?>
                                 </div>
                             </div>
                         <?php endforeach; ?>

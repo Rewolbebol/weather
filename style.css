@@ -320,16 +320,15 @@ button:hover {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     /* text-align: left; */
     /*remove text align from this div*/
-    width: 30%;
-    /*take 30% width */
-    min-width: 300px;
+    width: 40%;
+    /*take more width */
+    min-width: 350px;
     /* min width*/
-    overflow-x: auto;
-    /* Add horizontal scroll */
+   
 }
 
 .forecast-results {
-    width: 70%;
+    width: 60%;
 }
 
 .debug-data h2 {
@@ -353,10 +352,12 @@ button:hover {
 
 .debug-hour {
     /*remove background color*/
-    border: none; /* Remove the border */
+    border: none;
+    /* Remove the border */
     border-radius: 0px;
     padding: 0px;
-    font-size: 0.9em;
+    font-size: 0.8em;
+    /* make smaller font */
     box-shadow: none;
     /*remove box shadow*/
     transition: background-color 0.3s ease, color 0.3s ease;
@@ -365,8 +366,9 @@ button:hover {
     /*remove text align*/
     margin-bottom: 0px;
     /*remove margin*/
-    white-space: nowrap;
+    white-space: normal;
     /* Keep the content on one line */
+    word-break: break-all;
 }
 
 .debug-data-line {
@@ -379,7 +381,8 @@ button:hover {
     /* Light red background */
 }
 
-.hour.woodchip-end + .hour,.hour.woodchip-end-next {
+.hour.woodchip-end + .hour,
+.hour.woodchip-end-next {
     background-color: #ffdddd;
 }
 
@@ -388,7 +391,8 @@ button:hover {
 .hour.woodchip-end .hour-powerplant,
 .hour.woodchip-end + .hour .hour-time,
 .hour.woodchip-end + .hour .hour-temp,
-.hour.woodchip-end + .hour .hour-powerplant,.hour.woodchip-end-next .hour-time,
+.hour.woodchip-end + .hour .hour-powerplant,
+.hour.woodchip-end-next .hour-time,
 .hour.woodchip-end-next .hour-temp,
 .hour.woodchip-end-next .hour-powerplant {
     animation: pulsate 1s ease-out infinite;
@@ -437,5 +441,26 @@ button:hover {
     border-radius: 4px;
     z-index: 10;
     font-size: 0.9em;
-    pointer-events: none; /* Prevents the tooltip from interfering with mouse events */
+    pointer-events: none;
+    /* Prevents the tooltip from interfering with mouse events */
+}
+
+/* Tooltip Styles */
+#tooltip {
+    display: none;
+    position: absolute;
+    background-color: #333;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 4px;
+    z-index: 10;
+    font-size: 0.9em;
+    pointer-events: none;
+    /* Prevents the tooltip from interfering with mouse events */
+    -webkit-user-select: none;
+    /* Safari */
+    -ms-user-select: none;
+    /* IE 10 and IE 11 */
+    user-select: none;
+    /* Standard syntax */
 }
