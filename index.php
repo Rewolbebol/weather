@@ -8,7 +8,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
         /* Style for invalid input */
-        input.invalid, select.invalid {
+        input.invalid,
+        select.invalid {
             border: 2px solid red;
         }
     </style>
@@ -26,6 +27,12 @@
             </select>
             <label for="woodchip_m3">Šķeldas daudzums (m<sup>3</sup>):</label>
             <input type="number" id="woodchip_m3" name="woodchip_m3" min="0" step="0.01" required>
+            <label for="woodchip_efficiency">Šķeldas efektivitāte:</label>
+            <select id="woodchip_efficiency" name="woodchip_efficiency" required>
+                <option value="0.6">0.6</option>
+                <option value="0.7" selected>0.7</option>
+                <option value="0.8">0.8</option>
+            </select>
             <div class="date-time-group">
                 <div>
                     <label for="start_date">Sākuma datums (YYYY-MM-DD):</label>
@@ -110,11 +117,19 @@
         });
 
         //add event listeners to select to check if value is selected.
-        document.getElementById('location').addEventListener('change', function() {
-             if (this.value === '') {
+        document.getElementById('location').addEventListener('change', function () {
+            if (this.value === '') {
                 this.classList.add('invalid');
             } else {
-                 this.classList.remove('invalid');
+                this.classList.remove('invalid');
+            }
+        });
+         //add event listeners to select to check if value is selected.
+         document.getElementById('woodchip_efficiency').addEventListener('change', function () {
+            if (this.value === '') {
+                this.classList.add('invalid');
+            } else {
+                this.classList.remove('invalid');
             }
         });
     </script>

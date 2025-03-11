@@ -116,6 +116,13 @@ $startDateTime = null;
 $endDateTime = null;
 $woodchipM3 = null;
 
+if (isset($_POST['woodchip_efficiency'])) {
+    $woodchipEfficiency = floatval($_POST['woodchip_efficiency']);
+    if ($woodchipEfficiency < 0.6 || $woodchipEfficiency > 0.8) {
+        die("Error: Woodchip efficiency must be between 0.6 and 0.8.");
+    }
+}
+
 // Check if a location is selected
 if (isset($_POST['location']) && array_key_exists($_POST['location'], $locations)) {
     $selectedLocation = $_POST['location'];
@@ -283,6 +290,58 @@ $formattedWoodchipDuration = number_format($hours + $decimalHours, 2);
 <head>
     <title>Rezultāti</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Style for the Woodchip Efficiency Card */
+        .woodchip-efficiency-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .woodchip-efficiency-card {
+            background-color: #e8f0fe;
+            /* Light blue background */
+            border: 1px solid #a3c4eb;
+            /* Blue border */
+            padding: 10px 15px;
+            /* Reduced padding */
+            border-radius: 8px;
+            /* Slightly smaller rounded corners */
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+            /* Slightly reduced shadow */
+            transition: all 0.3s ease;
+            /* Smooth transition for hover */
+            width: auto;
+            /* Set width to auto */
+            max-width: 300px;
+            /* Add max-width */
+        }
+
+        .woodchip-efficiency-card:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            /* Slightly reduced shadow on hover */
+            transform: translateY(-1px);
+            /* Smaller lift on hover */
+        }
+
+        .woodchip-efficiency-card p {
+            margin: 0;
+            font-size: 1em;
+            /* Smaller font */
+            color: #333;
+            /* Darker text color */
+        }
+
+        .woodchip-efficiency-card strong {
+            color: #1a5276;
+            /* Darker blue for strong text */
+            font-weight: 500;
+            /* Less bold */
+        }
+    </style>
     <script>
         function showTooltip(event, text) {
             var tooltip = document.getElementById('tooltip');
@@ -311,24 +370,26 @@ $formattedWoodchipDuration = number_format($hours + $decimalHours, 2);
         <h1>Temperatūru prognoze</h1>
         <div class="main-content">
             <div class="debug-data">
+
                 <h2>Kalkulācijas:</h2>
                 <div class="debug-hourly-data">
                     <?php
                     $debugCumulativeWoodchipNeeded = 0;
-                    foreach ($hourlyCalculations as $calculation) :
+                    foreach ($hourlyCalculations as $calculation):
                         $debugCumulativeWoodchipNeeded += $calculation['powerplantOutput'];
                         $debugNeededM3 = ($debugCumulativeWoodchipNeeded * (1 / $woodchipEfficiency) * (1 / (1 - $powerplantLosses)));
 
                     ?>
                         <div class="debug-hour">
-                            <?= $calculation['time'] ?> - Jauda: <?= round($calculation['powerplantOutput'], 2) ?> MW - Šķeldas kopā: <?= number_format($debugNeededM3, 2) ?> m3
+                            <?= $calculation['time'] ?> - Jauda: <?= round($calculation['powerplantOutput'], 2) ?> MW -
+                            Šķeldas kopā: <?= number_format($debugNeededM3, 2) ?> m3
                         </div>
                     <?php endforeach; ?>
                 </div>
             </div>
 
             <div class="forecast-results">
-                <?php if (isset($selectedLocation)) : ?>
+                <?php if (isset($selectedLocation)): ?>
                     <p class="forecast-location">Prognoze priekš: <strong><?= $selectedLocation ?></strong></p>
                 <?php endif; ?>
 
@@ -337,15 +398,23 @@ $formattedWoodchipDuration = number_format($hours + $decimalHours, 2);
                     </strong> līdz <strong>
                         <?= $endDateTime->format('Y-m-d H:i') ?>
                     </strong> </p>
-                <?php if ($totalHours == 0) : ?>
+                <?php if ($totalHours == 0): ?>
                     <p class="no-data">Nav datu priekš tāda intervālā </p>
                 <?php endif; ?>
-                <?php if ($lastCorrectHour !== null) : ?>
+                <?php if ($lastCorrectHour !== null): ?>
                     <p class="woodchip-duration">
                         Ar <strong><?= $woodchipM3 ?></strong> m<sup>3</sup> šķeldas pietiks uz
                         <strong><?= $formattedWoodchipDuration ?></strong> stundām, līdz
                         <strong><?= $woodchipEndTime->format("Y-m-d H:i") ?></strong>.
                     </p>
+                    <!-- Woodchip Efficiency Card moved here -->
+                    <div class="woodchip-efficiency-container">
+                        <div class="woodchip-efficiency-card">
+                            <p>Izvēlētais šķeldas efektivitātes koeficients:
+                                <strong><?= $woodchipEfficiency ?></strong>
+                            </p>
+                        </div>
+                    </div>
 
                     <div class="forecast-data">
                         <?php
@@ -353,17 +422,17 @@ $formattedWoodchipDuration = number_format($hours + $decimalHours, 2);
                         $firstIncorrectHour = false;
                         $hoursCount = 0;
                         $startDateTimeForCounting = clone $startDateTime;
-                        foreach ($grouped as $date => $hours) : ?>
+                        foreach ($grouped as $date => $hours): ?>
                             <div class="day-container">
                                 <div class="date-column">
                                     <?= date('l, F jS', strtotime($date)) ?>
                                 </div>
                                 <div class="hourly-bar">
                                     <?php
-                                    foreach ($hours as $hour) :
+                                    foreach ($hours as $hour):
                                         $currentDateTime = new DateTime();
                                         $currentDateTime->setTimestamp($hour["timestamp"])->setTimezone($targetTimeZone);
-                                        $hoursCount =  ($currentDateTime->getTimestamp() - $startDateTimeForCounting->getTimestamp()) / 3600;
+                                        $hoursCount = ($currentDateTime->getTimestamp() - $startDateTimeForCounting->getTimestamp()) / 3600;
 
                                         $cumulativeWoodchipNeededTotal += $hour['powerplantOutput'];
                                         $neededM3 = ($cumulativeWoodchipNeededTotal * (1 / $woodchipEfficiency) * (1 / (1 - $powerplantLosses)));
@@ -384,8 +453,7 @@ $formattedWoodchipDuration = number_format($hours + $decimalHours, 2);
                                                                 }
                                                             }
 
-                                                            ?>" onmouseover="showTooltip(event, 'Šķeldas daudzums līdz šai vietai: <?= $neededM3Rounded ?> m³ , stundu skaits: <?= $hoursRounded ?>')" onmouseout="hideTooltip()"
-                                            ontouchstart="toggleTooltip(event, 'Šķeldas daudzums līdz šai vietai: <?= $neededM3Rounded ?> m³ , stundu skaits: <?= $hoursRounded ?>')">
+                                                            ?>" onmouseover="showTooltip(event, 'Šķeldas daudzums līdz šai vietai: <?= $neededM3Rounded ?> m³ , stundu skaits: <?= $hoursRounded ?>')" onmouseout="hideTooltip()" ontouchstart="toggleTooltip(event, 'Šķeldas daudzums līdz šai vietai: <?= $neededM3Rounded ?> m³ , stundu skaits: <?= $hoursRounded ?>')">
                                             <div class="hour-time">
                                                 <?= $hour['time'] ?>
                                             </div>
