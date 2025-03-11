@@ -201,6 +201,7 @@ $totalPowerplantOutputMW = 0;
 $hourlyWoodchipDuration = [];
 $totalWoodchipMW = $woodchipM3 * $woodchipEfficiency * (1 - $powerplantLosses);
 $hourlyCalculations = []; // Array to store calculations for each hour
+$allHourlyData = []; //add new array to hold hourly data with cummulative value
 
 foreach ($hourlyData as $hour) {
     $dt = new DateTime();
@@ -217,6 +218,7 @@ foreach ($hourlyData as $hour) {
         $powerplantOutputMW = isset($powerplantOutput[$selectedLocation]["{$temperature}"]) ? $powerplantOutput[$selectedLocation]["{$temperature}"] : 0; // Default to 0 if not found
         $woodchipDurationForHour = ($powerplantOutputMW > 0) ? $totalWoodchipMW / $powerplantOutputMW : 0;
         $hourlyWoodchipDuration[] = $woodchipDurationForHour;
+       
         $grouped[$dateKey][] = [
             'time' => $dt->format('H:i'),
             'temp' => $temperature,
@@ -224,6 +226,11 @@ foreach ($hourlyData as $hour) {
             // Add powerplant output to the data
             'powerplantOutput' => $powerplantOutputMW,
             'woodchipDurationForHour' => $woodchipDurationForHour,
+        ];
+         $allHourlyData[] = [
+           'time' => $dt->format('Y-m-d H:i'),
+            'temp' => $temperature,
+            'powerplantOutput' => $powerplantOutputMW,
         ];
         $totalPowerplantOutputMW += $powerplantOutputMW;
         $totalHours++;
@@ -310,7 +317,9 @@ $totalPowerplantOutputMW = $totalHours > 0 ? $totalPowerplantOutputMW / $totalHo
                     </p>
 
                     <div class="forecast-data">
-                        <?php foreach ($grouped as $date => $hours): ?>
+                        <?php 
+                        $cumulativeWoodchipNeededTotal = 0;
+                        foreach ($grouped as $date => $hours): ?>
                             <div class="day-container">
                                 <div class="date-column">
                                     <?= date('l, F jS', strtotime($date)) ?>
@@ -324,8 +333,8 @@ $totalPowerplantOutputMW = $totalHours > 0 ? $totalPowerplantOutputMW / $totalHo
                                         $currentDateTime->setTimestamp($hour["timestamp"])->setTimezone($targetTimeZone);
 
                                         $woodchipEndReached = $currentDateTime >= $woodchipEndTime;
-                                        $cumulativeWoodchipNeeded += $hour['powerplantOutput'];
-                                         $neededM3 = round(($cumulativeWoodchipNeeded * (1/$woodchipEfficiency )* (1/(1-$powerplantLosses))), 2) ;
+                                       $cumulativeWoodchipNeededTotal += $hour['powerplantOutput'];
+                                        $neededM3 = round(($cumulativeWoodchipNeededTotal * (1/$woodchipEfficiency )* (1/(1-$powerplantLosses))), 2) ;
                                         ?>
                                         <div class="hour <?php
                                         if ($woodchipEndReached) {
