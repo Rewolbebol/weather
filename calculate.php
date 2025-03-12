@@ -298,8 +298,6 @@ $formattedWoodchipDuration = number_format($hours + $decimalHours, 2);
 
 
 ?>
-
-
 <!DOCTYPE html>
 <html>
 
@@ -352,6 +350,22 @@ $formattedWoodchipDuration = number_format($hours + $decimalHours, 2);
             var tooltip = document.getElementById('tooltip');
             if (tooltip.style.display === 'block' && !tooltip.contains(event.target) && !event.target.closest('.hour')) {
                 tooltip.style.display = 'none';
+            }
+        });
+
+        // Add hover event listeners
+        document.addEventListener('mouseover', function(event) {
+            const hoveredHour = event.target.closest('.hour');
+            if (hoveredHour) {
+                const text = `Šķeldas daudzums līdz šai vietai: ${hoveredHour.dataset.neededM3} m³ , stundu skaits: ${hoveredHour.dataset.hoursRounded}`;
+                showTooltip(event, text);
+            }
+        });
+
+        document.addEventListener('mouseout', function(event) {
+            const hoveredHour = event.target.closest('.hour');
+            if (hoveredHour) {
+                hideTooltip();
             }
         });
     </script>
