@@ -216,34 +216,39 @@ a:hover {
 }
 
 /* Woodchip exhausted styles (CSS-based targeting) */
-.hour.woodchip-exhausted,
-.hour.woodchip-exhausted ~ .hour {
-    animation: pulseRed 2s infinite;
-    /* Pulsate */
-    background-color: #fdfdfd !important;
+.day-container .hour.woodchip-exhausted {
+    /* More specific selector */
+    animation: pulseRed 2s linear infinite;
+    /* Added linear */
+     border: 2px solid red; /* Add a red border */
 }
 
-.hour.woodchip-exhausted,
-.hour.woodchip-exhausted ~ .hour {
-    background-color: #f2dede !important;
-    /* Red */
+.day-container .hour.woodchip-exhausted,
+/* More specific selector */
+.day-container .hour.woodchip-exhausted~.hour {
+    /* More specific selector */
+    background-color: #f2dede;
+    /* Removed !important as we are more specific */
 }
 
 /* Pulsating animation for woodchip-exhausted */
 @keyframes pulseRed {
     0% {
-        background-color: #fdfdfd;
-        /* Start color (light red)*/
+        background-color: #f2dede;
+        /* Start color (dark red)*/
+         border-color: red; /* Ensure border is red at start */
     }
 
     50% {
-        background-color: #f2dede;
-        /* Peak color (darker red) */
+        background-color: #fdfdfd;
+        /* Peak color (light red) */
+        border-color: red; /* Ensure border is red at peak */
     }
 
     100% {
-        background-color: #fdfdfd;
+        background-color: #f2dede;
         /* Return to start color */
+        border-color: red; /* Ensure border is red at end */
     }
 }
 
