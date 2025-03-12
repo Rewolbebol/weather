@@ -1,82 +1,16 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Pareģošana</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.min.css"/>
-    <style>
-        /* Style for invalid input */
-        input.invalid,
-        select.invalid {
-            border: 2px solid red;
-        }
+    <link rel="stylesheet" type="text/css"
+        href="https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.min.css" />
 
-        /* Mobile-friendly styles */
-        body {
-            font-family: sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-
-        .container {
-            max-width: 90%; /* Adjust max-width for smaller screens */
-            margin: 20px auto;
-            padding: 15px;
-        }
-
-        h1 {
-            text-align: center;
-            font-size: 1.5em; /* Slightly smaller heading on mobile */
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        input[type="number"],
-        input[type="text"],
-        select {
-            width: 100%; /* Full width for form elements */
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        .date-time-group{
-            width: 100%;
-        }
-        .date-time-group div {
-            width: 100%;
-        }
-
-        button[type="submit"] {
-            background-color: #4CAF50;
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            width: 100%; /* Full width for button */
-        }
-
-        button[type="submit"]:hover {
-            background-color: #45a049;
-        }
-        /*media query for screens smaller than 768px */
-        @media (min-width: 768px) {
-        .container {
-            max-width: 600px;
-        }
-            h1{
-                font-size: 2em;
-            }
-        }
-    </style>
 </head>
+
 <body>
     <div class="container">
         <h1>Šķeldas pateriņa kalkulators</h1>
@@ -98,20 +32,23 @@
             <div class="date-time-group">
                 <div>
                     <label for="start_date">Sākuma datums un laiks (YYYY-MM-DD HH:MM):</label>
-                    <input type="text" id="start_datetime" name="start_datetime" class="datetimepicker-input" required readonly="readonly">
+                    <input type="text" id="start_datetime" name="start_datetime" class="datetimepicker-input"
+                        required readonly="readonly">
                 </div>
             </div>
             <div class="date-time-group">
                 <div>
                     <label for="end_date">Beigu datums un laiks (YYYY-MM-DD HH:MM):</label>
-                    <input type="text" id="end_datetime" name="end_datetime" class="datetimepicker-input" required readonly="readonly">
+                    <input type="text" id="end_datetime" name="end_datetime" class="datetimepicker-input"
+                        required readonly="readonly">
                 </div>
             </div>
             <button type="submit">Pareģot</button>
         </form>
     </div>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.full.min.js"></script>
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.full.min.js"></script>
     <script>
         $(document).ready(function() {
             $.datetimepicker.setLocale('lv');
@@ -174,4 +111,5 @@
         });
     </script>
 </body>
+
 </html>

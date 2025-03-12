@@ -306,58 +306,7 @@ $formattedWoodchipDuration = number_format($hours + $decimalHours, 2);
 <head>
     <title>Rezultāti</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        /* Style for the Woodchip Efficiency Card */
-        .woodchip-efficiency-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-            margin-bottom: 20px;
-        }
 
-        .woodchip-efficiency-card {
-            background-color: #e8f0fe;
-            /* Light blue background */
-            border: 1px solid #a3c4eb;
-            /* Blue border */
-            padding: 10px 15px;
-            /* Reduced padding */
-            border-radius: 8px;
-            /* Slightly smaller rounded corners */
-            text-align: center;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-            /* Slightly reduced shadow */
-            transition: all 0.3s ease;
-            /* Smooth transition for hover */
-            width: auto;
-            /* Set width to auto */
-            max-width: 300px;
-            /* Add max-width */
-        }
-
-        .woodchip-efficiency-card:hover {
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            /* Slightly reduced shadow on hover */
-            transform: translateY(-1px);
-            /* Smaller lift on hover */
-        }
-
-        .woodchip-efficiency-card p {
-            margin: 0;
-            font-size: 1em;
-            /* Smaller font */
-            color: #333;
-            /* Darker text color */
-        }
-
-        .woodchip-efficiency-card strong {
-            color: #1a5276;
-            /* Darker blue for strong text */
-            font-weight: 500;
-            /* Less bold */
-        }
-    </style>
     <script>
         function showTooltip(event, text) {
             var tooltip = document.getElementById('tooltip');
@@ -371,9 +320,37 @@ $formattedWoodchipDuration = number_format($hours + $decimalHours, 2);
             var tooltip = document.getElementById('tooltip');
             tooltip.style.display = 'none';
         }
+
+        function toggleTooltip(event, text) {
+            var tooltip = document.getElementById('tooltip');
+            if (tooltip.style.display === 'block') {
+                tooltip.style.display = 'none';
+            } else {
+                //check if this is touch event to adjust tooltip location
+                if (event.touches && event.touches.length > 0) {
+                    var touch = event.touches[0];
+                    tooltip.style.left = (touch.pageX + 10) + 'px';
+                    tooltip.style.top = (touch.pageY + 10) + 'px';
+                } else {
+                    tooltip.style.left = (event.pageX + 10) + 'px';
+                    tooltip.style.top = (event.pageY + 10) + 'px';
+                }
+                tooltip.innerHTML = text;
+                tooltip.style.display = 'block';
+            }
+            // Prevent the default behavior (e.g., scrolling)
+            event.preventDefault();
+        }
+
+        document.addEventListener('click', function(event) {
+            var tooltip = document.getElementById('tooltip');
+            if (tooltip.style.display === 'block' && !tooltip.contains(event.target) && !event.target.closest('.hour')) {
+                tooltip.style.display = 'none';
+            }
+        });
         document.addEventListener('touchstart', function(event) {
             var tooltip = document.getElementById('tooltip');
-            if (!tooltip.contains(event.target) && event.target.className !== 'hour') {
+            if (tooltip.style.display === 'block' && !tooltip.contains(event.target) && !event.target.closest('.hour')) {
                 tooltip.style.display = 'none';
             }
         });
@@ -385,25 +362,6 @@ $formattedWoodchipDuration = number_format($hours + $decimalHours, 2);
         <div id="tooltip"></div>
         <h1>Temperatūru prognoze</h1>
         <div class="main-content">
-            <div class="debug-data">
-
-                <h2>Kalkulācijas:</h2>
-                <div class="debug-hourly-data">
-                    <?php
-                    $debugCumulativeWoodchipNeeded = 0;
-                    foreach ($hourlyCalculations as $calculation):
-                        $debugCumulativeWoodchipNeeded += $calculation['powerplantOutput'];
-                        $debugNeededM3 = ($debugCumulativeWoodchipNeeded * (1 / $woodchipEfficiency) * (1 / (1 - $powerplantLosses)));
-
-                    ?>
-                        <div class="debug-hour">
-                            <?= $calculation['time'] ?> - Jauda: <?= round($calculation['powerplantOutput'], 2) ?> MW -
-                            Šķeldas kopā: <?= number_format($debugNeededM3, 2) ?> m3
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-
             <div class="forecast-results">
                 <?php if (isset($selectedLocation)): ?>
                     <p class="forecast-location">Prognoze priekš: <strong><?= $selectedLocation ?></strong></p>
@@ -469,7 +427,7 @@ $formattedWoodchipDuration = number_format($hours + $decimalHours, 2);
                                                                 }
                                                             }
 
-                                                            ?>" onmouseover="showTooltip(event, 'Šķeldas daudzums līdz šai vietai: <?= $neededM3Rounded ?> m³ , stundu skaits: <?= $hoursRounded ?>')" onmouseout="hideTooltip()" ontouchstart="toggleTooltip(event, 'Šķeldas daudzums līdz šai vietai: <?= $neededM3Rounded ?> m³ , stundu skaits: <?= $hoursRounded ?>')">
+                                                            ?>" onclick="toggleTooltip(event,'Šķeldas daudzums līdz šai vietai: <?= $neededM3Rounded ?> m³ , stundu skaits: <?= $hoursRounded ?>')" data-needed-m3="<?= $neededM3Rounded ?>" data-hours-rounded="<?= $hoursRounded ?>">
                                             <div class="hour-time">
                                                 <?= $hour['time'] ?>
                                             </div>
