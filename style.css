@@ -23,7 +23,8 @@ body {
     justify-content: flex-start;
     /* align container to top */
     padding: 20px;
-    position: relative; /* Added for tooltip positioning */
+    position: relative;
+    /* Added for tooltip positioning */
 }
 
 .container {
@@ -164,7 +165,8 @@ a:hover {
     cursor: pointer;
     transition: background-color 0.3s ease, transform 0.2s ease;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    position: relative; /* Added for tooltip positioning */
+    position: relative;
+    /* Added for tooltip positioning */
 }
 
 .hour:hover {
@@ -205,18 +207,44 @@ a:hover {
     display: none;
     pointer-events: none;
     white-space: nowrap;
+    top: 0;
+    /* Added */
+    left: 0;
+    /* Added */
+    transform: translate(0, 0);
+    /* Added */
 }
 
-/* Woodchip end styles */
-.woodchip-end {
+/* Woodchip exhausted styles (CSS-based targeting) */
+.hour.woodchip-exhausted,
+.hour.woodchip-exhausted ~ .hour {
+    animation: pulseRed 2s infinite;
+    /* Pulsate */
+    background-color: #fdfdfd !important;
+}
+
+.hour.woodchip-exhausted,
+.hour.woodchip-exhausted ~ .hour {
     background-color: #f2dede !important;
     /* Red */
-    border-color: #ebccd1 !important;
 }
 
-.woodchip-end-next {
-    background-color: #fdfdfd !important;
-    /* Red */
+/* Pulsating animation for woodchip-exhausted */
+@keyframes pulseRed {
+    0% {
+        background-color: #fdfdfd;
+        /* Start color (light red)*/
+    }
+
+    50% {
+        background-color: #f2dede;
+        /* Peak color (darker red) */
+    }
+
+    100% {
+        background-color: #fdfdfd;
+        /* Return to start color */
+    }
 }
 
 /* Woodchip Efficiency Card Styles */
@@ -307,25 +335,6 @@ select.invalid {
     border: 2px solid red;
 }
 
-#tooltip {
-    position: absolute;
-    background-color: rgba(0, 0, 0, 0.8);
-    color: #fff;
-    padding: 8px 12px;
-    border-radius: 4px;
-    font-size: 14px;
-    z-index: 10;
-    display: none;
-    pointer-events: none;
-    white-space: nowrap;
-    top: 0;
-    /* Added */
-    left: 0;
-    /* Added */
-    transform: translate(0, 0);
-    /* Added */
-}
-
 /* Media Queries for Responsiveness */
 @media (max-width: 1024px) {
     .container {
@@ -346,44 +355,60 @@ select.invalid {
     .forecast-results {
         text-align: center;
     }
+
     .hourly-bar {
-       flex-wrap: nowrap;
-       overflow-x: auto;
-       overflow-y: hidden;
-       scrollbar-width: none;
-       -ms-overflow-style: none;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
     }
+
     .hourly-bar::-webkit-scrollbar {
         display: none;
     }
 
     .hour {
-      width: 100px; /* fixed width for hour container*/
-        flex-shrink: 0; /* Prevent the hour container from shrinking*/
-        margin-bottom: 0; /* Remove extra space */
+        width: 100px;
+        /* fixed width for hour container*/
+        flex-shrink: 0;
+        /* Prevent the hour container from shrinking*/
+        margin-bottom: 0;
+        /* Remove extra space */
         font-size: 0.9rem;
     }
-   .date-column {
-       font-size: 0.8rem; /* Adjust the font size for the date column */
-       padding: 0.4rem; /* Adjust the padding for the date column */
-   }
+
+    .date-column {
+        font-size: 0.8rem;
+        /* Adjust the font size for the date column */
+        padding: 0.4rem;
+        /* Adjust the padding for the date column */
+    }
+
     .hour-time {
-        font-size: 0.7rem; /* Reduce the font size for hour time */
+        font-size: 0.7rem;
+        /* Reduce the font size for hour time */
     }
 
     .hour-temp {
-        font-size: 0.65rem; /* Reduce the font size for hour temperature */
+        font-size: 0.65rem;
+        /* Reduce the font size for hour temperature */
     }
+
     .hour-powerplant {
-        font-size: 0.6rem; /* Reduce the font size for hour powerplant */
+        font-size: 0.6rem;
+        /* Reduce the font size for hour powerplant */
     }
+
     body {
         padding: 10px;
     }
-      .hour:hover #tooltip{
+
+    .hour:hover #tooltip {
         display: none !important;
     }
-     .hour.tooltip-active #tooltip {
+
+    .hour.tooltip-active #tooltip {
         display: block !important;
     }
 }

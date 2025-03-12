@@ -269,6 +269,9 @@ foreach ($hourlyData as $hour) {
 $cumulativeWoodchipNeededTotal = 0;
 $lastCorrectHourTimestamp = null;
 $lastCorrectHour = null; // Track the last correct hour data
+$woodchipExhausted = false;
+$exhaustedHourIndex = -1; // Initialize the index to -1 (not found)
+$currentHourIndex = 0;
 
 foreach ($allHourlyData as $hour) {
     $cumulativeWoodchipNeededTotal += $hour['powerplantOutput'];
@@ -278,8 +281,11 @@ foreach ($allHourlyData as $hour) {
         $lastCorrectHourTimestamp = DateTime::createFromFormat('Y-m-d H:i', $hour['time'], $targetTimeZone)->getTimestamp();
         $lastCorrectHour = $hour;
     } else {
+        $exhaustedHourIndex = $currentHourIndex; // set index where woodchip is exhausted
+        $woodchipExhausted = true;
         break; // Stop when woodchip runs out
     }
+    $currentHourIndex++;
 }
 
 $woodchipEndTime = clone $startDateTime;
@@ -295,7 +301,6 @@ $minutes = floor(($diff % 3600) / 60);
 $seconds = $diff % 60;
 $decimalHours = round(($minutes * 60 + $seconds) / 3600, 2);
 $formattedWoodchipDuration = number_format($hours + $decimalHours, 2);
-
 
 ?>
 <!DOCTYPE html>
@@ -407,10 +412,11 @@ $formattedWoodchipDuration = number_format($hours + $decimalHours, 2);
                     <div class="forecast-data">
                         <?php
                         $cumulativeWoodchipNeededTotal = 0;
-                        $firstIncorrectHour = false;
                         $hoursCount = 0;
                         $startDateTimeForCounting = clone $startDateTime;
-                        foreach ($grouped as $date => $hours): ?>
+                        $currentHourIndex = 0;
+                        foreach ($grouped as $date => $hours):
+                        ?>
                             <div class="day-container">
                                 <div class="date-column">
                                     <?= date('l, F jS', strtotime($date)) ?>
@@ -427,21 +433,13 @@ $formattedWoodchipDuration = number_format($hours + $decimalHours, 2);
                                         $neededM3Rounded = round($neededM3, 2);
                                         $hoursRounded = number_format($hoursCount, 2);
 
-                                        $woodchipEndReached = $neededM3 > $woodchipM3;
-                                        $woodchipEndReachedOrNext = $currentDateTime->getTimestamp() > $lastCorrectHourTimestamp && $lastCorrectHourTimestamp !== null;
+                                        $classToApply = "";
 
+                                        if ($currentHourIndex >= $exhaustedHourIndex && $exhaustedHourIndex != -1) {
+                                            $classToApply = "woodchip-exhausted";
+                                        }
                                     ?>
-                                        <div class="hour <?php
-                                                            if ($woodchipEndReached && $woodchipEndReachedOrNext) {
-                                                                if (!$firstIncorrectHour) {
-                                                                    echo "woodchip-end";
-                                                                    $firstIncorrectHour = true;
-                                                                } else {
-                                                                    echo "woodchip-end-next";
-                                                                }
-                                                            }
-
-                                                            ?>" onclick="toggleTooltip(event,'Šķeldas daudzums līdz šai vietai: <?= $neededM3Rounded ?> m³ , stundu skaits: <?= $hoursRounded ?>')" data-needed-m3="<?= $neededM3Rounded ?>" data-hours-rounded="<?= $hoursRounded ?>">
+                                        <div class="hour <?= $classToApply ?>" onclick="toggleTooltip(event,'Šķeldas daudzums līdz šai vietai: <?= $neededM3Rounded ?> m³ , stundu skaits: <?= $hoursRounded ?>')" data-needed-m3="<?= $neededM3Rounded ?>" data-hours-rounded="<?= $hoursRounded ?>">
                                             <div class="hour-time">
                                                 <?= $hour['time'] ?>
                                             </div>
@@ -454,7 +452,9 @@ $formattedWoodchipDuration = number_format($hours + $decimalHours, 2);
                                             </div>
 
                                         </div>
-                                    <?php endforeach; ?>
+                                    <?php
+                                        $currentHourIndex++;
+                                    endforeach; ?>
                                 </div>
                             </div>
                         <?php endforeach; ?>
