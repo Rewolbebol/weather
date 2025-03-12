@@ -462,8 +462,8 @@ $formattedWoodchipDuration = number_format($hours + $decimalHours, 2);
                 <?php endif; ?>
             </div>
         </div>
-        <a href="index.php" class="new-search-link">Atpakaļ uz izvelni</a>
     </div>
+    <a href="index.php" class="new-search-link">Atpakaļ uz izvelni</a>
 </body>
 
 </html>
