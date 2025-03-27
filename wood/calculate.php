@@ -4,9 +4,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-// Configuration - Add your API key here
-$api_key = '17139ab945fb8111edc7436c20cb1940'; // Replace with your actual API key
-
 // Location options with coordinates
 $locations = [
     'Bauskas 207A' => [
@@ -142,8 +139,8 @@ if (isset($_POST['woodchip_m3'])) {
     die("Error: Woodchip volume is required.");
 }
 
-// API request with API key
-$url = "https://api.weatherxu.com/v1/weather?lat={$latitude}&lon={$longitude}&units=metric&api_key={$api_key}";
+// --- New Open-Meteo API Request ---
+$url = "https://api.open-meteo.com/v1/forecast?latitude={$latitude}&longitude={$longitude}&hourly=temperature_2m&timezone=auto";
 
 // Using cURL for better error handling
 $ch = curl_init();
@@ -160,13 +157,14 @@ if ($http_code != 200) {
 
 $data = json_decode($response, true);
 
-if (!$data || !$data['success']) {
-    $error_message = isset($data['error']['message']) ? $data['error']['message'] : 'Unknown API error';
+// --- Open-Meteo Error Handling ---
+if (!$data || isset($data['error'])) {
+    $error_message = isset($data['reason']) ? $data['reason'] : 'Unknown API error';
     die("Weather service error: {$error_message}");
 }
 
 // Get timezone from API response, or use default
-$timezone = isset($data['data']['timezone']) ? $data['data']['timezone'] : $defaultTimezone;
+$timezone = isset($data['timezone']) ? $data['timezone'] : $defaultTimezone;
 $targetTimeZone = new DateTimeZone($timezone);
 
 // Function to validate and format date and time
@@ -216,7 +214,9 @@ if ($startDateTime < $now) {
 
 // ... (rest of your code after date/time processing) ...
 // Process and display data
-$hourlyData = $data['data']['hourly']['data'];
+// --- Adapt for Open-Meteo structure ---
+$hourlyTimes = $data['hourly']['time'];
+$hourlyTemperatures = $data['hourly']['temperature_2m'];
 
 // Group by day and filter data by time range
 $grouped = [];
@@ -226,18 +226,33 @@ $totalHours = 0;
 $totalPowerplantOutputMW = 0;
 $hourlyWoodchipDuration = [];
 $totalWoodchipMW = $woodchipM3 * $woodchipEfficiency * (1 - $powerplantLosses);
-$allHourlyData = []; //add new array to hold hourly data with cummulative value
+$allHourlyData = []; //add new array to hold hourly data with cumulative value
 $hourlyCalculations = [];
 
-foreach ($hourlyData as $hour) {
-    $dt = new DateTime();
-    $dt->setTimestamp($hour['forecastStart'])
-        ->setTimezone($targetTimeZone);
+// --- Loop through Open-Meteo data ---
+for ($i = 0; $i < count($hourlyTimes); $i++) {
+    $timeString = $hourlyTimes[$i];
+    $tempValue = $hourlyTemperatures[$i];
 
+    // Parse ISO8601 time string
+    try {
+        $dt = new DateTime($timeString, $targetTimeZone);
+        // Ensure the DateTime object uses the correct target timezone
+        $dt->setTimezone($targetTimeZone);
+    } catch (Exception $e) {
+        // Skip this hour if the date format is invalid
+        continue;
+    }
+
+    $currentTimestamp = $dt->getTimestamp();
     $dateKey = $dt->format('Y-m-d');
-    if ($hour['forecastStart'] >= $startTimestamp && $hour['forecastStart'] <= $endTimestamp) {
-        //change temperature if minus 0 to zero
-        $temperature = round($hour['temperature']);
+
+    // Filter by selected time range
+    if ($currentTimestamp >= $startTimestamp && $currentTimestamp <= $endTimestamp) {
+        // Check if temperature exists and is numeric before rounding, default to 0 otherwise
+        // Open-Meteo seems reliable, but keep check for safety
+        $temperature = isset($tempValue) && is_numeric($tempValue) ? round($tempValue) : 0;
+        // The check for -0 is still relevant after rounding
         if ($temperature == -0) {
             $temperature = 0;
         }
@@ -246,7 +261,7 @@ foreach ($hourlyData as $hour) {
         $grouped[$dateKey][] = [
             'time' => $dt->format('H:i'),
             'temp' => $temperature,
-            'timestamp' => $hour['forecastStart'],
+            'timestamp' => $currentTimestamp, // Use the calculated timestamp
             // Add powerplant output to the data
             'powerplantOutput' => $powerplantOutputMW,
         ];
@@ -254,7 +269,7 @@ foreach ($hourlyData as $hour) {
             'time' => $dt->format('Y-m-d H:i'),
             'temp' => $temperature,
             'powerplantOutput' => $powerplantOutputMW,
-            'timestamp' => $hour['forecastStart'], // Include timestamp
+            'timestamp' => $currentTimestamp, // Include timestamp
         ];
         $hourlyCalculations[] = [
             'time' => $dt->format('Y-m-d H:i'),
@@ -391,6 +406,23 @@ $formattedWoodchipDuration = number_format($hours + $decimalHours, 2);
                     </strong> līdz <strong>
                         <?= $endDateTime->format('Y-m-d H:i') ?>
                     </strong> </p>
+
+                <!-- Added section to display API Time/Temperature Data -->
+                <!-- <div class="api-response-section">
+                    <h3>API Time & Temperature Data:</h3>
+                    <p>Location from API: Lat: <?= htmlspecialchars($data['latitude'] ?? 'N/A') ?>, Lon: <?= htmlspecialchars($data['longitude'] ?? 'N/A') ?></p>
+                    <pre><?php
+                        if (isset($hourlyTimes) && isset($hourlyTemperatures) && count($hourlyTimes) === count($hourlyTemperatures)) {
+                            for ($i = 0; $i < count($hourlyTimes); $i++) {
+                                echo htmlspecialchars($hourlyTimes[$i]) . " -- " . htmlspecialchars($hourlyTemperatures[$i] ?? 'N/A') . " °C\n";
+                            }
+                        } else {
+                            echo "Hourly time/temperature data not available in the expected format.";
+                        }
+                    ?></pre>
+                </div> -->
+                <!-- End of added section -->
+
                 <?php if ($totalHours == 0): ?>
                     <p class="no-data">Nav datu priekš tāda intervālā </p>
                 <?php endif; ?>
